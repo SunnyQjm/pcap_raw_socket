@@ -5,6 +5,6 @@ set(CMAKE_CXX_STANDARD 14)
 
 include_directories(libpcapcapture)
 include_directories(helper)
-add_executable(pcap_raw_socket main.cpp helper/PcapHelper.cpp helper/RawSocketHelper.cpp libpcapcapture/packet.cpp)
+add_executable(main.cpp helper/PcapHelper.cpp helper/RawSocketHelper.cpp libpcapcapture/packet.cpp)
 
 target_link_libraries(pcap_raw_socket pcap)
