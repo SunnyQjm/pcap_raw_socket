@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.5.1)
 project(pcap_raw_socket)
 
 set(CMAKE_CXX_STANDARD 14)
