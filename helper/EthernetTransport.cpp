@@ -110,7 +110,7 @@ namespace IP_NDN_STACK {
                 handleError("Failed to send the full frame: size=" + to_string(buffer.size()) +
                             " sent=" + to_string(sent));
             else
-                cout << "Successfully sent: " << block.size() << " bytes" << endl;
+                cout << "Successfully sent: " << buffer.size() << " bytes" << endl;
             // print block size because we don't want to count the padding in buffer
 //                NFD_LOG_FACE_TRACE("Successfully sent: " << block.size() << " bytes");
         }
@@ -131,24 +131,25 @@ namespace IP_NDN_STACK {
                 return;
             }
 
-            auto res = m_pcap.readNextPacketAfterDecode();
-            auto tuple = (tuple_p) std::get<0>(res);
-            if (tuple != nullptr) {
-                uint32_t dip = ntohl(tuple->key.dst_ip);
-                string dstIP = to_string((dip >> 24) & 0xFF);
-                dstIP.append(".");
-                dstIP.append(to_string((dip >> 16) & 0xFF));
-                dstIP.append(".");
-                dstIP.append(to_string((dip >> 8) & 0xFF));
-                dstIP.append(".");
-                dstIP.append(to_string((dip >> 0) & 0xFF));
-                rawSocketHelper.sendPacketTo(tuple->pkt, tuple->size, dstIP);
-                nanosleep(&sleepTime, nullptr);
-            }
-            delete tuple;
-            asyncRead();
-
-            return;
+            // 只用async read, 还是用Raw Socket 发包，速率没有提升
+//            auto res = m_pcap.readNextPacketAfterDecode();
+//            auto tuple = (tuple_p) std::get<0>(res);
+//            if (tuple != nullptr) {
+//                uint32_t dip = ntohl(tuple->key.dst_ip);
+//                string dstIP = to_string((dip >> 24) & 0xFF);
+//                dstIP.append(".");
+//                dstIP.append(to_string((dip >> 16) & 0xFF));
+//                dstIP.append(".");
+//                dstIP.append(to_string((dip >> 8) & 0xFF));
+//                dstIP.append(".");
+//                dstIP.append(to_string((dip >> 0) & 0xFF));
+//                rawSocketHelper.sendPacketTo(tuple->pkt, tuple->size, dstIP);
+//                nanosleep(&sleepTime, nullptr);
+//            }
+//            delete tuple;
+//            asyncRead();
+//
+//            return;
 
             const uint8_t *pkt;
             size_t len;
@@ -185,8 +186,6 @@ namespace IP_NDN_STACK {
             bool isOk = false;
             Block element;
             std::tie(isOk, element) = Block::fromBuffer(payload, length);
-            cout << element.value_size() << endl;
-            cout << element << endl;
             if (!isOk) {
                 cout << "not ok" << endl;
 //                NFD_LOG_FACE_WARN("Failed to parse incoming packet from " << sender);
@@ -201,9 +200,7 @@ namespace IP_NDN_STACK {
             if (m_destAddress.isMulticast()) {
                 std::memcpy(&tp.remoteEndpoint, sender.data(), sender.size());
             }
-            cout << "receive from " << sender.toString() << ": " << length << endl;
-            cout << tp.packet.value_size() << endl;
-            cout << tp.packet << endl;
+
             // 发送到目的主机
             sendPacket(tp.packet);
 //            this->receive(std::move(tp));

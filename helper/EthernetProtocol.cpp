@@ -20,7 +20,7 @@ namespace IP_NDN_STACK {
 
             // in some cases VLAN-tagged frames may survive the BPF filter,
             // make sure we do not process those frames (see #3348)
-            uint16_t ethertype = boost::endian::big_to_native(eh->ether_type);
+//            uint16_t ethertype = boost::endian::big_to_native(eh->ether_type);
 //            if (ethertype != ETHERTYPE_NDN)
 //                return {nullptr, "Received frame with wrong ethertype: " + std::to_string(ethertype)};
 

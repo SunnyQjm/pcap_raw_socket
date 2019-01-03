@@ -1,6 +1,7 @@
 #include <iostream>
 #include "EthernetTransport.hpp"
 #include <boost/thread.hpp>
+#include "helper/JSONCPPHelper.h"
 
 using namespace IP_NDN_STACK::pcap;
 
@@ -12,10 +13,11 @@ void deal() {
 int main(int argc, char **argv) {
     cout << argv[1] << endl;
     if (argc != 2) {
-        cout << "usage: sudo ./pcap_raw_socket <interface name> <in-mac-address> <out-mac-address>" << endl;
+        cout << "usage: sudo ./pcap_raw_socket <config-file-path>" << endl;
         exit(-1);
     }
-    cout << "networkMonitor" << endl;
+//
+//    cout << "networkMonitor" << endl;
 //    ndn::net::NetworkMonitor networkMonitor(service);
 //    cout << "getInterface" << endl;
 //    networkMonitor.onNetworkStateChanged.connect([&] {
@@ -30,9 +32,16 @@ int main(int argc, char **argv) {
 
 //    boost::thread t(deal);
 
+    string configFile = argv[1];
+    JSONCPPHelper jsoncppHelper(configFile);
+
+    string interfaceName = jsoncppHelper.getString("pcap_if");
+    string localAddress = jsoncppHelper.getString("local_address");
+    string remoteAddress = jsoncppHelper.getString("remote_address");
+
     boost::asio::io_service service;
-    IP_NDN_STACK::pcap::EthernetTransport transport(argv[1], Address::fromString("e0:d5:5e:bb:d8:82"),
-                                                    Address::fromString("e0:d5:5e:bb:d8:82"), service);
+    IP_NDN_STACK::pcap::EthernetTransport transport(interfaceName, Address::fromString(localAddress),
+                                                    Address::fromString(remoteAddress), service);
     service.run();
 
 //    IP_NDN_STACK::pcap::PcapHelper pcapHelper(argv[1]);
