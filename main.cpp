@@ -15,8 +15,11 @@ int main(int argc, char **argv) {
 
     pcapHelper.setPacketFilter("ether proto \\ip");
 
+    struct timespec sleepTime {
+        0, 100
+    };
     while (true) {
-        cout << endl << "begin: " << pcapHelper.getCurTime() << endl;
+//        cout << endl << "begin: " << pcapHelper.getCurTime() << endl;
         auto res = pcapHelper.readNextPacket();
         auto tuple = (tuple_p) std::get<0>(res);
         if (tuple == nullptr) {
@@ -33,7 +36,8 @@ int main(int argc, char **argv) {
         dstIP.append(to_string((dip >> 0) & 0xFF));
         rawSocketHelper.sendPacketTo(tuple->pkt, tuple->size, dstIP);
         delete tuple;
-        cout << "end: " << pcapHelper.getCurTime() << endl;
+//        cout << "end: " << pcapHelper.getCurTime() << endl;
+        nanosleep(&sleepTime, nullptr);
     }
 
     pcapHelper.close();
