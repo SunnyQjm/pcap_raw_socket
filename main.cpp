@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
     pcapHelper.setPacketFilter("ether proto \\ip");
 
     struct timespec sleepTime {
-        0, 100
+        0, 50
     };
     while (true) {
 //        cout << endl << "begin: " << pcapHelper.getCurTime() << endl;
