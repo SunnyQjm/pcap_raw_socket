@@ -30,118 +30,127 @@
 #define PCAP_NETMASK_UNKNOWN  0xffffffff
 #endif
 
-void BOOST_THROW_EXCEPTION(const PcapHelper::Error &error) {
-    std::cerr << error.what() << std::endl;
-    exit(-1);
-}
+namespace IP_NDN_STACK {
+    namespace pcap {
 
-PcapHelper::PcapHelper(const std::string &interfaceName)
-        : m_pcap(nullptr) {
-    char errbuf[PCAP_ERRBUF_SIZE] = {};
-    m_pcap = pcap_create(interfaceName.c_str(), errbuf);
-    bpf_u_int32 net;
-    bpf_u_int32 mask;
-    pcap_lookupnet(interfaceName.c_str(), &net, &mask, errbuf);
-    this->net = net;
-    if (!m_pcap)
-        BOOST_THROW_EXCEPTION(Error("pcap_create: " + std::string(errbuf)));
+        PcapHelper::PcapHelper(const std::string &interfaceName)
+                : m_pcap(nullptr) {
+            char errbuf[PCAP_ERRBUF_SIZE] = {};
+                m_pcap = pcap_create(interfaceName.c_str(), errbuf);
+            bpf_u_int32 net;
+            bpf_u_int32 mask;
+            pcap_lookupnet(interfaceName.c_str(), &net, &mask, errbuf);
+            this->net = net;
+            if (!m_pcap)
+                BOOST_THROW_EXCEPTION(Error("pcap_create: " + std::string(errbuf)));
 
-    // Enable "immediate mode", effectively disabling any read buffering in the kernel.
-    // This corresponds to the BIOCIMMEDIATE ioctl on BSD-like systems (including macOS)
-    // where libpcap uses a BPF device. On Linux this forces libpcap not to use TPACKET_V3,
-    // even if the kernel supports it, thus preventing bug #1511.
-    if (pcap_set_immediate_mode(m_pcap, 1) < 0)
-        BOOST_THROW_EXCEPTION(Error("pcap_set_immediate_mode failed"));
-    if(pcap_set_buffer_size(m_pcap, 102400000) < 0)
-        BOOST_THROW_EXCEPTION(Error("pcap_set_buffer_size failed"));
-}
+            // Enable "immediate mode", effectively disabling any read buffering in the kernel.
+            // This corresponds to the BIOCIMMEDIATE ioctl on BSD-like systems (including macOS)
+            // where libpcap uses a BPF device. On Linux this forces libpcap not to use TPACKET_V3,
+            // even if the kernel supports it, thus preventing bug #1511.
+            if (pcap_set_immediate_mode(m_pcap, 1) < 0)
+                BOOST_THROW_EXCEPTION(Error("pcap_set_immediate_mode failed"));
+            if (pcap_set_buffer_size(m_pcap, 102400000) < 0)
+                BOOST_THROW_EXCEPTION(Error("pcap_set_buffer_size failed"));
+        }
 
-PcapHelper::~PcapHelper() {
-    close();
-}
+        PcapHelper::~PcapHelper() {
+            close();
+        }
 
-void
-PcapHelper::activate(int dlt) {
-    int ret = pcap_activate(m_pcap);
-    if (ret < 0)
-        BOOST_THROW_EXCEPTION(Error("pcap_activate: " + std::string(pcap_statustostr(ret))));
+        void
+        PcapHelper::activate(int dlt) {
+            int ret = pcap_activate(m_pcap);
+            if (ret < 0)
+                BOOST_THROW_EXCEPTION(Error("pcap_activate: " + std::string(pcap_statustostr(ret))));
 
-    if (dlt != -1 && pcap_set_datalink(m_pcap, dlt) < 0)
-        BOOST_THROW_EXCEPTION(Error("pcap_set_datalink: " + getLastError()));
+            if (dlt != -1 && pcap_set_datalink(m_pcap, dlt) < 0)
+                BOOST_THROW_EXCEPTION(Error("pcap_set_datalink: " + getLastError()));
 
-    if (pcap_setdirection(m_pcap, PCAP_D_IN) < 0)
-        BOOST_THROW_EXCEPTION(Error("pcap_setdirection: " + getLastError()));
-}
+            if (pcap_setdirection(m_pcap, PCAP_D_IN) < 0)
+                BOOST_THROW_EXCEPTION(Error("pcap_setdirection: " + getLastError()));
+        }
 
-void
-PcapHelper::close() {
-    if (m_pcap) {
-        pcap_close(m_pcap);
-        m_pcap = nullptr;
+        void
+        PcapHelper::close() {
+            if (m_pcap) {
+                pcap_close(m_pcap);
+                m_pcap = nullptr;
+            }
+        }
+
+        int
+        PcapHelper::getFd() const {
+            int fd = pcap_get_selectable_fd(m_pcap);
+            if (fd < 0)
+                BOOST_THROW_EXCEPTION(Error("pcap_get_selectable_fd failed"));
+
+            // we need to duplicate the fd, otherwise both pcap_close() and the
+            // caller may attempt to close the same fd and one of them will fail
+            return ::dup(fd);
+        }
+
+        std::string
+        PcapHelper::getLastError() const {
+            return pcap_geterr(m_pcap);
+        }
+
+        size_t
+        PcapHelper::getNDropped() const {
+            pcap_stat ps{};
+            if (pcap_stats(m_pcap, &ps) < 0)
+                BOOST_THROW_EXCEPTION(Error("pcap_stats: " + getLastError()));
+
+            return ps.ps_drop;
+        }
+
+        void
+        PcapHelper::setPacketFilter(const string &filter) const {
+            struct bpf_program prog{};
+            if (pcap_compile(m_pcap, &prog, filter.c_str(), 1, this->net) < 0)
+                BOOST_THROW_EXCEPTION(Error("pcap_compile: " + getLastError()));
+
+            int ret = pcap_setfilter(m_pcap, &prog);
+            pcap_freecode(&prog);
+            if (ret < 0)
+                BOOST_THROW_EXCEPTION(Error("pcap_setfilter: " + getLastError()));
+        }
+
+        std::tuple<const tuple_p, size_t, std::string>
+        PcapHelper::readNextPacketAfterDecode() {
+            pcap_pkthdr *header = nullptr;
+            const uint8_t *packet = nullptr;
+            int ret = pcap_next_ex(m_pcap, &header, &packet);
+            if (ret < 0 || packet == nullptr)
+                return std::make_tuple(nullptr, 0, getLastError());
+            else if (ret == 0)
+                return std::make_tuple(nullptr, 0, "timed out");
+            else {
+                auto tuple = new tuple_t();
+                decode(packet, header->caplen, header->len, this->getCurTime(), tuple);
+                return std::make_tuple(tuple, header->caplen, "");
+            }
+        }
+
+
+        long PcapHelper::getCurTime() {
+            auto duration_in_ms = chrono::duration_cast<chrono::milliseconds>(
+                    chrono::system_clock::now()
+                            .time_since_epoch());
+            return duration_in_ms.count();
+        }
+
+        std::tuple<const uint8_t *, size_t, std::string> PcapHelper::readNextPacket() const {
+            pcap_pkthdr *header;
+            const uint8_t *packet;
+
+            int ret = pcap_next_ex(m_pcap, &header, &packet);
+            if (ret < 0)
+                return std::make_tuple(nullptr, 0, getLastError());
+            else if (ret == 0)
+                return std::make_tuple(nullptr, 0, "timed out");
+            else
+                return std::make_tuple(packet, header->caplen, "");
+        }
     }
-}
-
-int
-PcapHelper::getFd() const {
-    int fd = pcap_get_selectable_fd(m_pcap);
-    if (fd < 0)
-        BOOST_THROW_EXCEPTION(Error("pcap_get_selectable_fd failed"));
-
-    // we need to duplicate the fd, otherwise both pcap_close() and the
-    // caller may attempt to close the same fd and one of them will fail
-    return ::dup(fd);
-}
-
-std::string
-PcapHelper::getLastError() const {
-    return pcap_geterr(m_pcap);
-}
-
-size_t
-PcapHelper::getNDropped() const {
-    pcap_stat ps{};
-    if (pcap_stats(m_pcap, &ps) < 0)
-        BOOST_THROW_EXCEPTION(Error("pcap_stats: " + getLastError()));
-
-    return ps.ps_drop;
-}
-
-void
-PcapHelper::setPacketFilter(const string& filter) const {
-    struct bpf_program prog{};
-    if (pcap_compile(m_pcap, &prog, filter.c_str(), 1, this->net) < 0)
-        BOOST_THROW_EXCEPTION(Error("pcap_compile: " + getLastError()));
-
-    int ret = pcap_setfilter(m_pcap, &prog);
-    pcap_freecode(&prog);
-    if (ret < 0)
-        BOOST_THROW_EXCEPTION(Error("pcap_setfilter: " + getLastError()));
-}
-
-std::tuple<const tuple_p, size_t, std::string>
-PcapHelper::readNextPacket()  {
-//    cout << "readNextPacket" << endl;
-    pcap_pkthdr *header = nullptr;
-    const uint8_t *packet = nullptr;
-
-    cout << endl << "begin cat: " << getCurTime() << endl;
-    int ret = pcap_next_ex(m_pcap, &header, &packet);
-    cout << "end cat: " << getCurTime() << endl;
-    if (ret < 0 || packet == nullptr)
-        return std::make_tuple(nullptr, 0, getLastError());
-    else if (ret == 0)
-        return std::make_tuple(nullptr, 0, "timed out");
-    else {
-        auto tuple = new tuple_t();
-        decode(packet, header->caplen, header->len, this->getCurTime(), tuple);
-        return std::make_tuple(tuple, header->caplen, "");
-    }
-}
-
-
-long PcapHelper::getCurTime() {
-    auto duration_in_ms = chrono::duration_cast<chrono::milliseconds>(
-            chrono::system_clock::now()
-                    .time_since_epoch());
-    return duration_in_ms.count();
 }
