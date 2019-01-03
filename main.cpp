@@ -16,10 +16,11 @@ int main(int argc, char **argv) {
     pcapHelper.setPacketFilter("ether proto \\ip");
 
     while (true) {
+        cout << endl << "begin: " << pcapHelper.getCurTime() << endl;
         auto res = pcapHelper.readNextPacket();
         auto tuple = (tuple_p) std::get<0>(res);
         if (tuple == nullptr) {
-            cout << "tuple null" << endl;
+//            cout << "tuple null" << endl;
             continue;
         }
         uint32_t dip = ntohl(tuple->key.dst_ip);
@@ -32,6 +33,7 @@ int main(int argc, char **argv) {
         dstIP.append(to_string((dip >> 0) & 0xFF));
         rawSocketHelper.sendPacketTo(tuple->pkt, tuple->size, dstIP);
         delete tuple;
+        cout << "end: " << pcapHelper.getCurTime() << endl;
     }
 
     pcapHelper.close();

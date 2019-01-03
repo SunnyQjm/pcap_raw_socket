@@ -120,7 +120,7 @@ PcapHelper::setPacketFilter(const string& filter) const {
 
 std::tuple<const tuple_p, size_t, std::string>
 PcapHelper::readNextPacket()  {
-    cout << "readNextPacket" << endl;
+//    cout << "readNextPacket" << endl;
     pcap_pkthdr *header = nullptr;
     const uint8_t *packet = nullptr;
 
