@@ -31,6 +31,7 @@ int main(int argc, char **argv) {
         dstIP.append(".");
         dstIP.append(to_string((dip >> 0) & 0xFF));
         rawSocketHelper.sendPacketTo(tuple->pkt, tuple->size, dstIP);
+        delete tuple;
     }
 
     pcapHelper.close();
