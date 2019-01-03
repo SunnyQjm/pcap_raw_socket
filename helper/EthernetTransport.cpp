@@ -109,7 +109,8 @@ namespace IP_NDN_STACK {
             else if (static_cast<size_t>(sent) < buffer.size())
                 handleError("Failed to send the full frame: size=" + to_string(buffer.size()) +
                             " sent=" + to_string(sent));
-//            else
+            else
+                cout << "Successfully sent: " << block.size() << " bytes" << endl;
             // print block size because we don't want to count the padding in buffer
 //                NFD_LOG_FACE_TRACE("Successfully sent: " << block.size() << " bytes");
         }
