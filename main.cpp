@@ -31,8 +31,8 @@ int main(int argc, char **argv) {
 //    boost::thread t(deal);
 
     boost::asio::io_service service;
-    IP_NDN_STACK::pcap::EthernetTransport transport(argv[1], Address::fromString(argv[2]),
-                                                    Address::fromString(argv[3]), service);
+    IP_NDN_STACK::pcap::EthernetTransport transport(argv[1], Address::fromString("e0:d5:5e:bb:d8:82"),
+                                                    Address::fromString("e0:d5:5e:bb:d8:82"), service);
     service.run();
 
 //    IP_NDN_STACK::pcap::PcapHelper pcapHelper(argv[1]);
