@@ -52,6 +52,8 @@ PcapHelper::PcapHelper(const std::string &interfaceName)
     // even if the kernel supports it, thus preventing bug #1511.
     if (pcap_set_immediate_mode(m_pcap, 1) < 0)
         BOOST_THROW_EXCEPTION(Error("pcap_set_immediate_mode failed"));
+    if(pcap_set_buffer_size(m_pcap, 102400000) < 0)
+        BOOST_THROW_EXCEPTION(Error("pcap_set_buffer_size failed"));
 }
 
 PcapHelper::~PcapHelper() {
