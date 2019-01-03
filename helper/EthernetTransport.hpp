@@ -8,6 +8,7 @@
 #include "common.hpp"
 #include "EthernetProtocol.hpp"
 #include "PcapHelper.h"
+#include "RawSocketHelper.h"
 #include <ndn-cxx/net/network-interface.hpp>
 #include <ndn-cxx/net/network-monitor.hpp>
 #include <cstring> // for memcpy()
@@ -110,6 +111,7 @@ namespace IP_NDN_STACK {
             ethernet::Address m_srcAddress;
             ethernet::Address m_destAddress;
             std::string m_interfaceName;
+            RawSocketHelper rawSocketHelper;
 
         private:
             ndn::util::signal::ScopedConnection m_netifStateConn;

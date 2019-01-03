@@ -128,10 +128,29 @@ namespace IP_NDN_STACK {
                 return;
             }
 
+            auto res = m_pcap.readNextPacketAfterDecode();
+            auto tuple = (tuple_p) std::get<0>(res);
+            if (tuple != nullptr) {
+                uint32_t dip = ntohl(tuple->key.dst_ip);
+                string dstIP = to_string((dip >> 24) & 0xFF);
+                dstIP.append(".");
+                dstIP.append(to_string((dip >> 16) & 0xFF));
+                dstIP.append(".");
+                dstIP.append(to_string((dip >> 8) & 0xFF));
+                dstIP.append(".");
+                dstIP.append(to_string((dip >> 0) & 0xFF));
+                rawSocketHelper.sendPacketTo(tuple->pkt, tuple->size, dstIP);
+            }
+            delete tuple;
+            asyncRead();
+
+            return;
+
             const uint8_t *pkt;
             size_t len;
             std::string err;
             std::tie(pkt, len, err) = m_pcap.readNextPacket();
+
 
             if (pkt != nullptr) {
                 const ether_header *eh;
@@ -178,7 +197,7 @@ namespace IP_NDN_STACK {
             if (m_destAddress.isMulticast()) {
                 std::memcpy(&tp.remoteEndpoint, sender.data(), sender.size());
             }
-            cout << "receive from " <<  sender.toString() << ": " << length << endl;
+            cout << "receive from " << sender.toString() << ": " << length << endl;
             cout << tp.packet.value_size() << endl;
             cout << tp.packet << endl;
             // 发送到目的主机
