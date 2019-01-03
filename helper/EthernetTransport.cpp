@@ -177,8 +177,8 @@ namespace IP_NDN_STACK {
                 std::memcpy(&tp.remoteEndpoint, sender.data(), sender.size());
             }
             cout << "receive from " <<  sender.toString() << ": " << length << endl;
-            cout << element.size() << endl;
-            cout << tp.packet.size() << endl;
+            cout << element.value_size() << endl;
+            cout << tp.packet.value_size() << endl;
             // 发送到目的主机
             sendPacket(tp.packet);
 //            this->receive(std::move(tp));
