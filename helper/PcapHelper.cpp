@@ -109,11 +109,9 @@ PcapHelper::getNDropped() const {
 void
 PcapHelper::setPacketFilter(const string& filter) const {
     struct bpf_program prog{};
-    cout << "what1" << endl;
     if (pcap_compile(m_pcap, &prog, filter.c_str(), 1, this->net) < 0)
         BOOST_THROW_EXCEPTION(Error("pcap_compile: " + getLastError()));
 
-    cout << "what2" << endl;
     int ret = pcap_setfilter(m_pcap, &prog);
     pcap_freecode(&prog);
     if (ret < 0)
@@ -126,7 +124,9 @@ PcapHelper::readNextPacket()  {
     pcap_pkthdr *header = nullptr;
     const uint8_t *packet = nullptr;
 
+    cout << endl << "begin cat: " << getCurTime() << endl;
     int ret = pcap_next_ex(m_pcap, &header, &packet);
+    cout << "end cat: " << getCurTime() << endl;
     if (ret < 0 || packet == nullptr)
         return std::make_tuple(nullptr, 0, getLastError());
     else if (ret == 0)
