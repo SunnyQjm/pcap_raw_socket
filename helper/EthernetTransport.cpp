@@ -121,6 +121,9 @@ namespace IP_NDN_STACK {
                                      [this](const auto &e, auto) { this->handleRead(e); });
         }
 
+        struct timespec sleepTime{
+                0, 50
+        };
         void
         EthernetTransport::handleRead(const boost::system::error_code &error) {
             if (error) {
@@ -140,6 +143,7 @@ namespace IP_NDN_STACK {
                 dstIP.append(".");
                 dstIP.append(to_string((dip >> 0) & 0xFF));
                 rawSocketHelper.sendPacketTo(tuple->pkt, tuple->size, dstIP);
+                nanosleep(&sleepTime, nullptr);
             }
             delete tuple;
             asyncRead();
