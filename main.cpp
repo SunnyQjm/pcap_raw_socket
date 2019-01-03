@@ -11,7 +11,7 @@ void deal() {
 
 int main(int argc, char **argv) {
     cout << argv[1] << endl;
-    if (argc != 4) {
+    if (argc != 2) {
         cout << "usage: sudo ./pcap_raw_socket <interface name> <in-mac-address> <out-mac-address>" << endl;
         exit(-1);
     }
