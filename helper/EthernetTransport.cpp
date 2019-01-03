@@ -162,6 +162,8 @@ namespace IP_NDN_STACK {
             bool isOk = false;
             Block element;
             std::tie(isOk, element) = Block::fromBuffer(payload, length);
+            cout << element.value_size() << endl;
+            cout << element << endl;
             if (!isOk) {
                 cout << "not ok" << endl;
 //                NFD_LOG_FACE_WARN("Failed to parse incoming packet from " << sender);
@@ -177,8 +179,8 @@ namespace IP_NDN_STACK {
                 std::memcpy(&tp.remoteEndpoint, sender.data(), sender.size());
             }
             cout << "receive from " <<  sender.toString() << ": " << length << endl;
-            cout << element.value_size() << endl;
             cout << tp.packet.value_size() << endl;
+            cout << tp.packet << endl;
             // 发送到目的主机
             sendPacket(tp.packet);
 //            this->receive(std::move(tp));
