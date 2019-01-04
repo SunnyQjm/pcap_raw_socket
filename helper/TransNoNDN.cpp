@@ -17,6 +17,7 @@ TransNoNDN::TransNoNDN(const string &interfaceName)
         BOOST_THROW_EXCEPTION(Error(e.what()));
     }
 
+    asyncRead();
 }
 
 void TransNoNDN::asyncRead() {
