@@ -102,9 +102,9 @@ namespace IP_NDN_STACK {
 //                                         reinterpret_cast<const uint8_t *>(&ethertype) + 2);
             vector<uint8_t> bufIP(payload, payload + length);
 
-            bufDstAddress.insert(bufDstAddress.begin(), bufSrcAddress.begin(), bufSrcAddress.end());
+            bufDstAddress.insert(bufDstAddress.end(), bufSrcAddress.begin(), bufSrcAddress.end());
 //            bufDstAddress.insert(bufDstAddress.begin(), bufEtherType.begin(), bufEtherType.end());
-            bufDstAddress.insert(bufDstAddress.begin(), bufIP.begin(), bufIP.end());
+            bufDstAddress.insert(bufDstAddress.end(), bufIP.begin(), bufIP.end());
 
             int sent = pcap_inject(m_pcap_out.getPcap(), bufDstAddress.data(), bufDstAddress.size());
 
