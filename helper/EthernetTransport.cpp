@@ -91,7 +91,7 @@ namespace IP_NDN_STACK {
         void
         EthernetTransport::sendPacket(const ndn::Block &block) {
             ndn::EncodingBuffer buffer(block);
-
+            cout << buffer.size() << endl;
             // pad with zeroes if the payload is too short
             if (block.size() < ethernet::MIN_DATA_LEN) {
                 static const uint8_t padding[ethernet::MIN_DATA_LEN] = {};
