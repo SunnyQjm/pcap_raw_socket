@@ -108,7 +108,7 @@ namespace IP_NDN_STACK {
 
             int sent = pcap_inject(m_pcap_out.getPcap(), bufDstAddress.data(), bufDstAddress.size());
 
-            cout << (length + m_destAddress.size() + m_srcAddress.size());
+            cout << m_srcAddress.toString() << " -> " << m_destAddress.toString() << endl;
             cout << "Successfully sent: " << sent << " bytes(" << bufDstAddress.size() << ")" << endl;
 
 //            boost::asio::const_buffer bufIP((void *) payload, length);
