@@ -24,6 +24,7 @@ namespace IP_NDN_STACK {
             try {
                 cout << "pcap active" << endl;
                 m_pcap.activate();
+                m_pcap_out.activate();
                 cout << "assign pcap fd: " << m_pcap_out.getFd() << endl;
                 m_socket.assign(m_pcap_out.getFd());
             } catch (const PcapHelper::Error &e) {
@@ -56,7 +57,7 @@ namespace IP_NDN_STACK {
                 m_socket.close(error);
             }
             m_pcap.close();
-
+            m_pcap_out.close();
 //            // Ensure that the Transport stays alive at least
 //            // until all pending handlers are dispatched
 //            getGlobalIoService().post([this] {
