@@ -97,7 +97,7 @@ namespace IP_NDN_STACK {
         EthernetTransport::sendPacket(const uint8_t *payload, size_t length) {
             vector<uint8_t> bufDstAddress(m_destAddress.data(), m_destAddress.data() + m_destAddress.size());
             vector<uint8_t> bufSrcAddress(m_srcAddress.data(), m_srcAddress.data() + m_srcAddress.size());
-            uint16_t ethertype = ntohs(0x0800);
+            uint16_t ethertype = htons(0x0800);
             vector<uint8_t> bufEtherType(reinterpret_cast<const uint8_t *>(&ethertype),
                                          reinterpret_cast<const uint8_t *>(&ethertype) + 2);
             vector<uint8_t> bufIP(payload, payload + length);
