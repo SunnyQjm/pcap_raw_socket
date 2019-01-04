@@ -71,5 +71,6 @@ void TransNoNDN::doClose() {
 }
 
 void TransNoNDN::start() {
+    cout << "run" << endl;
     service.run();
 }
