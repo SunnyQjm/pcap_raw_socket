@@ -63,8 +63,7 @@ namespace IP_NDN_STACK {
             * @param sender Sender address
             */
             void
-            receivePayload(const uint8_t *payload, size_t length,
-                           const ethernet::Address &sender);
+            receivePayload(const uint8_t *payload, size_t length);
 
         protected:
 
@@ -94,7 +93,7 @@ namespace IP_NDN_STACK {
              * @brief Sends the specified TLV block on the network wrapped in an Ethernet frame
              */
             void
-            sendPacket(const ndn::Block &block);
+            sendPacket(const uint8_t *payload, size_t length);
 
             void
             asyncRead();

@@ -4,6 +4,8 @@
 
 #include "EthernetTransport.hpp"
 
+#include <boost/asio/buffer.hpp>
+#include <vector>
 
 namespace IP_NDN_STACK {
     namespace pcap {
@@ -12,7 +14,8 @@ namespace IP_NDN_STACK {
         EthernetTransport::Packet::Packet(Block &&packet1)
                 : packet(std::move(packet1)), remoteEndpoint(0) {}
 
-        EthernetTransport::EthernetTransport(const string &interfaceName, const string &outInterfaceName, const ethernet::Address &localAddress,
+        EthernetTransport::EthernetTransport(const string &interfaceName, const string &outInterfaceName,
+                                             const ethernet::Address &localAddress,
                                              const ethernet::Address &remoteEndpoint, boost::asio::io_service &service)
                 : m_socket(service), m_socket_out(service), m_pcap(interfaceName), m_pcap_out(outInterfaceName),
                   m_srcAddress(localAddress), m_destAddress(remoteEndpoint),
@@ -84,35 +87,57 @@ namespace IP_NDN_STACK {
         EthernetTransport::doSend(Packet &&packet) {
 //            NFD_LOG_FACE_TRACE(__func__);
 
-            sendPacket(packet.packet);
+//            sendPacket(packet.packet);
         }
 
 
         void
-        EthernetTransport::sendPacket(const ndn::Block &block) {
-            ndn::EncodingBuffer buffer(block);
-            cout << buffer.size() << endl;
-            // pad with zeroes if the payload is too short
-            if (block.size() < ethernet::MIN_DATA_LEN) {
-                static const uint8_t padding[ethernet::MIN_DATA_LEN] = {};
-                buffer.appendByteArray(padding, ethernet::MIN_DATA_LEN - block.size());
-            }
+        EthernetTransport::sendPacket(const uint8_t *payload, size_t length) {
+            vector<uint8_t> bufDstAddress(m_destAddress.data(), m_destAddress.data() + m_destAddress.size());
+            vector<uint8_t> bufSrcAddress(m_srcAddress.data(), m_srcAddress.data() + m_srcAddress.size());
+            uint16_t ethertype = ntohs(0x0800);
+            vector<uint8_t> bufEtherType(reinterpret_cast<const uint8_t *>(&ethertype),
+                                         reinterpret_cast<const uint8_t *>(&ethertype) + 2);
+            vector<uint8_t> bufIP(payload, payload + length);
 
-            // construct and prepend the ethernet header
-            uint16_t ethertype = boost::endian::native_to_big(0x0800);
-            buffer.prependByteArray(reinterpret_cast<const uint8_t *>(&ethertype), ethernet::TYPE_LEN);
-            buffer.prependByteArray(m_srcAddress.data(), m_srcAddress.size());
-            buffer.prependByteArray(m_destAddress.data(), m_destAddress.size());
+            bufDstAddress.insert(bufDstAddress.begin(), bufSrcAddress.begin(), bufSrcAddress.end());
+            bufDstAddress.insert(bufDstAddress.begin(), bufEtherType.begin(), bufEtherType.end());
+            bufDstAddress.insert(bufDstAddress.begin(), bufIP.begin(), bufIP.end());
 
-            // send the frame
-            int sent = pcap_inject(m_pcap_out.getPcap(), buffer.buf(), buffer.size());
-            if (sent < 0)
-                handleError("Send operation failed: " + m_pcap_out.getLastError());
-            else if (static_cast<size_t>(sent) < buffer.size())
-                handleError("Failed to send the full frame: size=" + to_string(buffer.size()) +
-                            " sent=" + to_string(sent));
-            else
-                cout << "Successfully sent: " << buffer.size() << " bytes" << endl;
+            int sent = pcap_inject(m_pcap_out.getPcap(), bufDstAddress.data(), bufDstAddress.size());
+
+            cout << "Successfully sent: " << sent << " bytes" << endl;
+
+//            boost::asio::const_buffer bufIP((void *) payload, length);
+//            boost::asio::const_buffer bufEtherType(reinterpret_cast<const uint8_t *>(&ethertype), 2);
+//            boost::asio::const_buffer srcAddress(m_srcAddress.data(), m_srcAddress.size());
+//            boost::asio::const_buffer dstAddress(m_destAddress.data(), m_destAddress.size());
+
+
+
+//            auto rawPacket = dstAddress + srcAddress + bufEtherType + bufIP;
+//            ndn::EncodingBuffer buffer(block);
+//            // pad with zeroes if the payload is too short
+//            if (block.size() < ethernet::MIN_DATA_LEN) {
+//                static const uint8_t padding[ethernet::MIN_DATA_LEN] = {};
+//                buffer.appendByteArray(padding, ethernet::MIN_DATA_LEN - block.size());
+//            }
+//
+//            // construct and prepend the ethernet header
+//            uint16_t ethertype = boost::endian::native_to_big(0x0800);
+//            buffer.prependByteArray(reinterpret_cast<const uint8_t *>(&ethertype), ethernet::TYPE_LEN);
+//            buffer.prependByteArray(m_srcAddress.data(), m_srcAddress.size());
+//            buffer.prependByteArray(m_destAddress.data(), m_destAddress.size());
+//
+//            // send the frame
+//            int sent = pcap_inject(m_pcap_out.getPcap(), buffer.buf(), buffer.size());
+//            if (sent < 0)
+//                handleError("Send operation failed: " + m_pcap_out.getLastError());
+//            else if (static_cast<size_t>(sent) < buffer.size())
+//                handleError("Failed to send the full frame: size=" + to_string(buffer.size()) +
+//                            " sent=" + to_string(sent));
+//            else
+//                cout << "Successfully sent: " << buffer.size() << " bytes" << endl;
             // print block size because we don't want to count the padding in buffer
 //                NFD_LOG_FACE_TRACE("Successfully sent: " << block.size() << " bytes");
         }
@@ -126,6 +151,7 @@ namespace IP_NDN_STACK {
         struct timespec sleepTime{
                 0, 50
         };
+
         void
         EthernetTransport::handleRead(const boost::system::error_code &error) {
             if (error) {
@@ -157,19 +183,19 @@ namespace IP_NDN_STACK {
             size_t len;
             std::string err;
             std::tie(pkt, len, err) = m_pcap.readNextPacket();
+            receivePayload(pkt, len);
 
-
-            if (pkt != nullptr) {
-                const ether_header *eh;
-                std::tie(eh, err) = checkFrameHeader(pkt, len, m_srcAddress,
-                                                     m_destAddress.isMulticast() ? m_destAddress : m_srcAddress);
-                if (eh != nullptr) {
-                    ethernet::Address sender(eh->ether_shost);
-                    pkt += ethernet::HDR_LEN;
-                    len -= ethernet::HDR_LEN;
-                    receivePayload(pkt, len, sender);
-                }
-            }
+//            if (pkt != nullptr) {
+//                const ether_header *eh;
+//                std::tie(eh, err) = checkFrameHeader(pkt, len, m_srcAddress,
+//                                                     m_destAddress.isMulticast() ? m_destAddress : m_srcAddress);
+//                if (eh != nullptr) {
+//                    ethernet::Address sender(eh->ether_shost);
+//                    pkt += ethernet::HDR_LEN;
+//                    len -= ethernet::HDR_LEN;
+//                    receivePayload(pkt, len, sender);
+//                }
+//            }
 
 #ifdef _DEBUG
             size_t nDropped = m_pcap.getNDropped();
@@ -182,31 +208,8 @@ namespace IP_NDN_STACK {
         }
 
         void
-        EthernetTransport::receivePayload(const uint8_t *payload, size_t length,
-                                          const ethernet::Address &sender) {
-//            NFD_LOG_FACE_TRACE("Received: " << length << " bytes from " << sender);
-            bool isOk = false;
-            Block element;
-            std::tie(isOk, element) = Block::fromBuffer(payload, length);
-            if (!isOk) {
-                cout << "not ok" << endl;
-//                NFD_LOG_FACE_WARN("Failed to parse incoming packet from " << sender);
-                // This packet won't extend the face lifetime
-                return;
-            }
-            m_hasRecentlyReceived = true;
-
-            Packet tp(std::move(element));
-            static_assert(sizeof(tp.remoteEndpoint) >= ethernet::ADDR_LEN,
-                          "Transport::Packet::remoteEndpoint is too small");
-            if (m_destAddress.isMulticast()) {
-                std::memcpy(&tp.remoteEndpoint, sender.data(), sender.size());
-            }
-
-            // 发送到目的主机
-//            onReadSignal(tp.packet);
-            sendPacket(tp.packet);
-//            this->receive(std::move(tp));
+        EthernetTransport::receivePayload(const uint8_t *payload, size_t length) {
+            sendPacket(payload, length);
         }
 
         void
