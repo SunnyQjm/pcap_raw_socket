@@ -143,7 +143,6 @@ namespace IP_NDN_STACK {
             cout << endl << "start: " << m_pcap.getCurTime() << endl;
             m_socket.async_read_some(boost::asio::null_buffers(),
                                      [this](const auto &e, auto) { this->handleRead(e); });
-            cout << "end: " << m_pcap.getCurTime() << endl;
         }
 
         struct timespec sleepTime{
@@ -152,6 +151,7 @@ namespace IP_NDN_STACK {
 
         void
         EthernetTransport::handleRead(const boost::system::error_code &error) {
+            cout << "end: " << m_pcap.getCurTime() << endl;
             if (error) {
                 cout << "error: " << error;
                 return;
