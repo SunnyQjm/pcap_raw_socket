@@ -103,9 +103,9 @@ namespace IP_NDN_STACK {
             buffer.prependByteArray(m_destAddress.data(), m_destAddress.size());
 
             // send the frame
-            int sent = pcap_inject(m_pcap.getPcap(), buffer.buf(), buffer.size());
+            int sent = pcap_inject(m_pcap_out.getPcap(), buffer.buf(), buffer.size());
             if (sent < 0)
-                handleError("Send operation failed: " + m_pcap.getLastError());
+                handleError("Send operation failed: " + m_pcap_out.getLastError());
             else if (static_cast<size_t>(sent) < buffer.size())
                 handleError("Failed to send the full frame: size=" + to_string(buffer.size()) +
                             " sent=" + to_string(sent));
