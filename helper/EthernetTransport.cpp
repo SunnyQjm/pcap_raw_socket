@@ -106,7 +106,7 @@ namespace IP_NDN_STACK {
 
             int sent = pcap_inject(m_pcap_out.getPcap(), bufDstAddress.data(), bufDstAddress.size());
 
-            cout << "Successfully sent: " << sent << " bytes" << endl;
+            cout << "Successfully sent: " << sent << " bytes(" <<  bufDstAddress.size() << ")" << endl;
 
 //            boost::asio::const_buffer bufIP((void *) payload, length);
 //            boost::asio::const_buffer bufEtherType(reinterpret_cast<const uint8_t *>(&ethertype), 2);
