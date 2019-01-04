@@ -97,13 +97,13 @@ namespace IP_NDN_STACK {
         EthernetTransport::sendPacket(const uint8_t *payload, size_t length) {
             vector<uint8_t> bufDstAddress(m_destAddress.data(), m_destAddress.data() + m_destAddress.size());
             vector<uint8_t> bufSrcAddress(m_srcAddress.data(), m_srcAddress.data() + m_srcAddress.size());
-            uint16_t ethertype = boost::endian::native_to_big(0x0800);
-            vector<uint8_t> bufEtherType(reinterpret_cast<const uint8_t *>(&ethertype),
-                                         reinterpret_cast<const uint8_t *>(&ethertype) + 2);
+//            uint16_t ethertype = htons(0x0800);
+//            vector<uint8_t> bufEtherType(reinterpret_cast<const uint8_t *>(&ethertype),
+//                                         reinterpret_cast<const uint8_t *>(&ethertype) + 2);
             vector<uint8_t> bufIP(payload, payload + length);
 
             bufDstAddress.insert(bufDstAddress.begin(), bufSrcAddress.begin(), bufSrcAddress.end());
-            bufDstAddress.insert(bufDstAddress.begin(), bufEtherType.begin(), bufEtherType.end());
+//            bufDstAddress.insert(bufDstAddress.begin(), bufEtherType.begin(), bufEtherType.end());
             bufDstAddress.insert(bufDstAddress.begin(), bufIP.begin(), bufIP.end());
 
             int sent = pcap_inject(m_pcap_out.getPcap(), bufDstAddress.data(), bufDstAddress.size());
@@ -111,14 +111,6 @@ namespace IP_NDN_STACK {
             cout << m_srcAddress.toString() << " -> " << m_destAddress.toString() << endl;
             cout << "Successfully sent: " << sent << " bytes(" << bufDstAddress.size() << ")" << endl;
 
-//            boost::asio::const_buffer bufIP((void *) payload, length);
-//            boost::asio::const_buffer bufEtherType(reinterpret_cast<const uint8_t *>(&ethertype), 2);
-//            boost::asio::const_buffer srcAddress(m_srcAddress.data(), m_srcAddress.size());
-//            boost::asio::const_buffer dstAddress(m_destAddress.data(), m_destAddress.size());
-
-
-
-//            auto rawPacket = dstAddress + srcAddress + bufEtherType + bufIP;
 //            ndn::EncodingBuffer buffer(block);
 //            // pad with zeroes if the payload is too short
 //            if (block.size() < ethernet::MIN_DATA_LEN) {
@@ -194,8 +186,9 @@ namespace IP_NDN_STACK {
                                                      m_destAddress.isMulticast() ? m_destAddress : m_srcAddress);
                 if (eh != nullptr) {
 //                    ethernet::Address sender(eh->ether_shost);
-                    pkt += ethernet::HDR_LEN;
-                    len -= ethernet::HDR_LEN;
+                    //保留以太网类型，只修改原地址和目的地址
+                    pkt += (ethernet::HDR_LEN - 2);
+                    len -= (ethernet::HDR_LEN - 2);
                     receivePayload(pkt, len);
                 }
             }
