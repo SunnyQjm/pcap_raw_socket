@@ -107,6 +107,7 @@ namespace IP_NDN_STACK {
 
         protected:
             boost::asio::posix::stream_descriptor m_socket;
+            boost::asio::posix::stream_descriptor m_socket_out;
             PcapHelper m_pcap;
             PcapHelper m_pcap_out;
             ethernet::Address m_srcAddress;

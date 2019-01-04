@@ -14,7 +14,7 @@ namespace IP_NDN_STACK {
 
         EthernetTransport::EthernetTransport(const string &interfaceName, const string &outInterfaceName, const ethernet::Address &localAddress,
                                              const ethernet::Address &remoteEndpoint, boost::asio::io_service &service)
-                : m_socket(service), m_pcap(interfaceName), m_pcap_out(outInterfaceName),
+                : m_socket(service), m_socket_out(service), m_pcap(interfaceName), m_pcap_out(outInterfaceName),
                   m_srcAddress(localAddress), m_destAddress(remoteEndpoint),
                   m_interfaceName(interfaceName), m_hasRecentlyReceived(false)
 #ifdef _DEBUG
@@ -26,7 +26,8 @@ namespace IP_NDN_STACK {
                 m_pcap.activate();
                 m_pcap_out.activate();
                 cout << "assign pcap fd: " << m_pcap_out.getFd() << endl;
-                m_socket.assign(m_pcap_out.getFd());
+                m_socket.assign(m_pcap.getFd());
+                m_socket_out.assign(m_pcap_out.getFd());
             } catch (const PcapHelper::Error &e) {
                 BOOST_THROW_EXCEPTION(Error(e.what()));
             }
