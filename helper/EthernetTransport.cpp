@@ -108,8 +108,8 @@ namespace IP_NDN_STACK {
 
             int sent = pcap_inject(m_pcap_out.getPcap(), bufDstAddress.data(), bufDstAddress.size());
 
-            cout << m_srcAddress.toString() << " -> " << m_destAddress.toString() << endl;
-            cout << "Successfully sent: " << sent << " bytes(" << bufDstAddress.size() << ")" << endl;
+//            cout << m_srcAddress.toString() << " -> " << m_destAddress.toString() << endl;
+//            cout << "Successfully sent: " << sent << " bytes(" << bufDstAddress.size() << ")" << endl;
 
 //            ndn::EncodingBuffer buffer(block);
 //            // pad with zeroes if the payload is too short
