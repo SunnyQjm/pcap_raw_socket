@@ -26,6 +26,7 @@ namespace IP_NDN_STACK {
         {
             try {
                 cout << "pcap active" << endl;
+                m_pcap.setPacketFilter("ether proto \\ip");
                 m_pcap.activate();
                 m_pcap_out.activate();
                 cout << "assign pcap fd: " << m_pcap_out.getFd() << endl;
@@ -107,7 +108,7 @@ namespace IP_NDN_STACK {
             int sent = pcap_inject(m_pcap_out.getPcap(), bufDstAddress.data(), bufDstAddress.size());
 
             cout << (length + m_destAddress.size() + m_srcAddress.size());
-            cout << "Successfully sent: " << sent << " bytes(" <<  bufDstAddress.size() << ")" << endl;
+            cout << "Successfully sent: " << sent << " bytes(" << bufDstAddress.size() << ")" << endl;
 
 //            boost::asio::const_buffer bufIP((void *) payload, length);
 //            boost::asio::const_buffer bufEtherType(reinterpret_cast<const uint8_t *>(&ethertype), 2);
