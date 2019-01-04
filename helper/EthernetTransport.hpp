@@ -22,7 +22,7 @@ namespace IP_NDN_STACK {
 
         class EthernetTransport {
         public:
-            EthernetTransport(const string  &localEndpoint, const ethernet::Address &localAddress,
+            EthernetTransport(const string  &localEndpoint, const string &outInterfaceName, const ethernet::Address &localAddress,
                               const ethernet::Address &remoteEndpoint, boost::asio::io_service &service);
 
             class Error : public std::runtime_error {
@@ -108,13 +108,16 @@ namespace IP_NDN_STACK {
         protected:
             boost::asio::posix::stream_descriptor m_socket;
             PcapHelper m_pcap;
+            PcapHelper m_pcap_out;
             ethernet::Address m_srcAddress;
             ethernet::Address m_destAddress;
             std::string m_interfaceName;
             RawSocketHelper rawSocketHelper;
 
+            typedef signal::Signal<const ndn::Block &> OnReadSignal;
         private:
             ndn::util::signal::ScopedConnection m_netifStateConn;
+            OnReadSignal onReadSignal;
             bool m_hasRecentlyReceived;
 #ifdef _DEBUG
             /// number of frames dropped by the kernel, as reported by libpcap

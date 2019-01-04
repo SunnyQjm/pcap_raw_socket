@@ -12,9 +12,9 @@ namespace IP_NDN_STACK {
         EthernetTransport::Packet::Packet(Block &&packet1)
                 : packet(std::move(packet1)), remoteEndpoint(0) {}
 
-        EthernetTransport::EthernetTransport(const string &interfaceName, const ethernet::Address &localAddress,
+        EthernetTransport::EthernetTransport(const string &interfaceName, const string &outInterfaceName, const ethernet::Address &localAddress,
                                              const ethernet::Address &remoteEndpoint, boost::asio::io_service &service)
-                : m_socket(service), m_pcap(interfaceName),
+                : m_socket(service), m_pcap(interfaceName), m_pcap_out(outInterfaceName),
                   m_srcAddress(localAddress), m_destAddress(remoteEndpoint),
                   m_interfaceName(interfaceName), m_hasRecentlyReceived(false)
 #ifdef _DEBUG
@@ -24,8 +24,8 @@ namespace IP_NDN_STACK {
             try {
                 cout << "pcap active" << endl;
                 m_pcap.activate();
-                cout << "assign pcap fd" << m_pcap.getFd() << endl;
-                m_socket.assign(m_pcap.getFd());
+                cout << "assign pcap fd: " << m_pcap_out.getFd() << endl;
+                m_socket.assign(m_pcap_out.getFd());
             } catch (const PcapHelper::Error &e) {
                 BOOST_THROW_EXCEPTION(Error(e.what()));
             }
@@ -202,6 +202,7 @@ namespace IP_NDN_STACK {
             }
 
             // 发送到目的主机
+//            onReadSignal(tp.packet);
             sendPacket(tp.packet);
 //            this->receive(std::move(tp));
         }

@@ -2,6 +2,7 @@
   "is_pin_cpu": false,
   "interval_len": 1000,
   "pcap_if": "enp1s0f0",
+  "pcap_if_out": "enp1s0f1",
   "pcap_buf_size": 2097152,
   "pcap_snap_len": 65535,
   "pcap_to_ms": 1,

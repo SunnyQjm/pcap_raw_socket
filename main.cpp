@@ -36,11 +36,12 @@ int main(int argc, char **argv) {
     JSONCPPHelper jsoncppHelper(configFile);
 
     string interfaceName = jsoncppHelper.getString("pcap_if");
+    string interfaceOutName = jsoncppHelper.getString("pcap_if_out");
     string localAddress = jsoncppHelper.getString("local_address");
     string remoteAddress = jsoncppHelper.getString("remote_address");
 
     boost::asio::io_service service;
-    IP_NDN_STACK::pcap::EthernetTransport transport(interfaceName, Address::fromString(localAddress),
+    IP_NDN_STACK::pcap::EthernetTransport transport(interfaceName, interfaceOutName, Address::fromString(localAddress),
                                                     Address::fromString(remoteAddress), service);
     service.run();
 
