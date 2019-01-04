@@ -99,7 +99,7 @@ namespace IP_NDN_STACK {
             }
 
             // construct and prepend the ethernet header
-            uint16_t ethertype = boost::endian::native_to_big(ethernet::ETHERTYPE_NDN);
+            uint16_t ethertype = boost::endian::native_to_big(0x0800);
             buffer.prependByteArray(reinterpret_cast<const uint8_t *>(&ethertype), ethernet::TYPE_LEN);
             buffer.prependByteArray(m_srcAddress.data(), m_srcAddress.size());
             buffer.prependByteArray(m_destAddress.data(), m_destAddress.size());
