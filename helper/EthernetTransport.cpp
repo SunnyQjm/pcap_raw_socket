@@ -186,19 +186,19 @@ namespace IP_NDN_STACK {
             size_t len;
             std::string err;
             std::tie(pkt, len, err) = m_pcap.readNextPacket();
-            receivePayload(pkt, len);
+//            receivePayload(pkt, len);
 
-//            if (pkt != nullptr) {
-//                const ether_header *eh;
-//                std::tie(eh, err) = checkFrameHeader(pkt, len, m_srcAddress,
-//                                                     m_destAddress.isMulticast() ? m_destAddress : m_srcAddress);
-//                if (eh != nullptr) {
+            if (pkt != nullptr) {
+                const ether_header *eh;
+                std::tie(eh, err) = checkFrameHeader(pkt, len, m_srcAddress,
+                                                     m_destAddress.isMulticast() ? m_destAddress : m_srcAddress);
+                if (eh != nullptr) {
 //                    ethernet::Address sender(eh->ether_shost);
-//                    pkt += ethernet::HDR_LEN;
-//                    len -= ethernet::HDR_LEN;
-//                    receivePayload(pkt, len, sender);
-//                }
-//            }
+                    pkt += ethernet::HDR_LEN;
+                    len -= ethernet::HDR_LEN;
+                    receivePayload(pkt, len);
+                }
+            }
 
 #ifdef _DEBUG
             size_t nDropped = m_pcap.getNDropped();
