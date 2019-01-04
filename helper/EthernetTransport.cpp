@@ -26,8 +26,9 @@ namespace IP_NDN_STACK {
         {
             try {
                 cout << "pcap active" << endl;
-                m_pcap.setPacketFilter("ether proto \\ip");
                 m_pcap.activate();
+                m_pcap.setPacketFilter("ether proto \\ip");
+
                 m_pcap_out.activate();
                 cout << "assign pcap fd: " << m_pcap_out.getFd() << endl;
                 m_socket.assign(m_pcap.getFd());
