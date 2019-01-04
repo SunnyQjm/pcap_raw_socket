@@ -1,5 +1,6 @@
 #include <iostream>
 #include "EthernetTransport.hpp"
+#include "TransNoNDN.h"
 #include <boost/thread.hpp>
 #include "helper/JSONCPPHelper.h"
 
@@ -40,10 +41,13 @@ int main(int argc, char **argv) {
     string localAddress = jsoncppHelper.getString("local_address");
     string remoteAddress = jsoncppHelper.getString("remote_address");
 
-    boost::asio::io_service service;
-    IP_NDN_STACK::pcap::EthernetTransport transport(interfaceName, interfaceOutName, Address::fromString(localAddress),
-                                                    Address::fromString(remoteAddress), service);
-    service.run();
+    TransNoNDN transNoNDN(interfaceName);
+    transNoNDN.start();
+//    boost::asio::io_service service;
+//    IP_NDN_STACK::pcap::EthernetTransport transport(interfaceName, interfaceOutName, Address::fromString(localAddress),
+//                                                    Address::fromString(remoteAddress), service);
+//    service.run();
+
 
 //    IP_NDN_STACK::pcap::PcapHelper pcapHelper(argv[1]);
 //    RawSocketHelper rawSocketHelper;

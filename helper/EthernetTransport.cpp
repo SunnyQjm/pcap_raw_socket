@@ -95,6 +95,7 @@ namespace IP_NDN_STACK {
 
         void
         EthernetTransport::sendPacket(const uint8_t *payload, size_t length) {
+
             vector<uint8_t> bufDstAddress(m_destAddress.data(), m_destAddress.data() + m_destAddress.size());
             vector<uint8_t> bufSrcAddress(m_srcAddress.data(), m_srcAddress.data() + m_srcAddress.size());
 //            uint16_t ethertype = htons(0x0800);
