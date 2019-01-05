@@ -25,7 +25,7 @@ void TransNoNDN::asyncRead() {
 }
 
 struct timespec sleepTime{
-        0, 30
+        0, 100
 };
 
 void TransNoNDN::handleRead(const boost::system::error_code &error) {
