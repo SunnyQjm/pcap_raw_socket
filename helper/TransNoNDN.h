@@ -5,9 +5,10 @@
 #ifndef PCAP_RAW_SOCKET_TRANSNONDN_H
 #define PCAP_RAW_SOCKET_TRANSNONDN_H
 
-#include "common.hpp"
+//#include "common.hpp"
 #include "RawSocketHelper.h"
 #include "PcapHelper.h"
+#include <boost/asio.hpp>
 
 using namespace IP_NDN_STACK::pcap;
 class TransNoNDN {
