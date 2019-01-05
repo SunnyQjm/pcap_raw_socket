@@ -1,5 +1,4 @@
 #include <iostream>
-#include "EthernetTransport.hpp"
 #include "TransNoNDN.h"
 #include <boost/thread.hpp>
 #include "helper/JSONCPPHelper.h"
