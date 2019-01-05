@@ -5,8 +5,7 @@
 #include "TransNoNDN.h"
 
 TransNoNDN::TransNoNDN(const string &interfaceName)
-        : m_socket(service)
-        , m_pcap(interfaceName){
+        : m_socket(service), m_pcap(interfaceName) {
     try {
         cout << "pcap active" << endl;
         m_pcap.activate();
@@ -26,7 +25,7 @@ void TransNoNDN::asyncRead() {
 }
 
 struct timespec sleepTime{
-        0, 10
+        0, 50
 };
 
 void TransNoNDN::handleRead(const boost::system::error_code &error) {
@@ -47,11 +46,12 @@ void TransNoNDN::handleRead(const boost::system::error_code &error) {
         dstIP.append(".");
         dstIP.append(to_string((dip >> 0) & 0xFF));
         rawSocketHelper.sendPacketTo(tuple->pkt, tuple->size, dstIP);
+        delete tuple;
+        asyncRead();
+    } else {
         nanosleep(&sleepTime, nullptr);
+        asyncRead();
     }
-    delete tuple;
-    asyncRead();
-
     return;
 }
 
