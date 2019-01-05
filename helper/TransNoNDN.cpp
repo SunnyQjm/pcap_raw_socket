@@ -37,6 +37,7 @@ void TransNoNDN::handleRead(const boost::system::error_code &error) {
     auto res = m_pcap.readNextPacketAfterDecode();
     auto tuple = (tuple_p) std::get<0>(res);
     if (tuple != nullptr) {
+        cout << tuple->size << endl;
         uint32_t dip = ntohl(tuple->key.dst_ip);
         string dstIP = to_string((dip >> 24) & 0xFF);
         dstIP.append(".");
